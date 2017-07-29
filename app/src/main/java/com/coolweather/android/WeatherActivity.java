@@ -5,6 +5,7 @@ import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -25,6 +26,7 @@ import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
 
+    private static String TAG = "WeatherActivity";
 
     private ScrollView weatherLayout;
 
@@ -68,13 +70,16 @@ public class WeatherActivity extends AppCompatActivity {
         sportText = (TextView)findViewById(R.id.sport_text);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherString  = prefs.getString("weather", null);
+        String weatherString = null;//zhg  = prefs.getString("weather", null);
+
         if(weatherString != null){
+            Log.d(TAG, "weatherString is "+ weatherString);
             Weather weather = Utility.handleWeatherResponse(weatherString);
             showWeatherInfo(weather);
         }else {
             String weatherId = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
+            Log.d(TAG, "weatherId: "+ weatherId);
             requestWeather(weatherId);
         }
     }
@@ -82,6 +87,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     public void requestWeather(final String weatherId){
         String weatherUrl = "http://guolin.tech/api/weather?cityid="+weatherId+"&key=79505fd794d344ea949e815cc768e551";
+
+        Log.d(TAG, weatherUrl);
 
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
@@ -104,6 +111,7 @@ public class WeatherActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        Log.d(TAG, "onResponse WeatherInfo:"+ weather);
                         if(weather != null && "ok".equals(weather.status)){
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather",responseText);
@@ -129,9 +137,10 @@ public class WeatherActivity extends AppCompatActivity {
         titleUpdateTime.setText(updateTime);
         degeeText.setText(degree);
         weatherInfoText.setText(weatherInfo);
-        forecastLayout.removeAllViews();
 
+        forecastLayout.removeAllViews();
         for(Forecast forecast : weather.forecastList){
+            Log.d(TAG, "zhg");
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
 
             TextView dateText = (TextView)view.findViewById(R.id.data_text);
@@ -139,7 +148,8 @@ public class WeatherActivity extends AppCompatActivity {
             TextView maxText = (TextView)view.findViewById(R.id.max_text);
             TextView minText = (TextView)view.findViewById(R.id.min_text);
 
-            dateText.setText(forecast.data);
+            Log.d(TAG, "date = "+ forecast.date);
+            dateText.setText(forecast.date);
             infoText.setText(forecast.more.info);
             maxText.setText(forecast.temperature.max);
             minText.setText(forecast.temperature.min);
